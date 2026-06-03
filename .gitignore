@@ -1,0 +1,13 @@
+.DS_Store
+build/
+dist/
+output/
+*.3dsx
+*.cia
+*.3ds
+*.elf
+*.smdh
+*.map
+*.o
+*.d
+external/*
