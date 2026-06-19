@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "devkitarm",
+      "displayName": "devkitARM 3DS Release",
+      "description": "Configure Lunar3D for Nintendo 3DS using the devkitARM toolchain.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/DevkitARM3DS.cmake",
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "3dsx",
+      "configurePreset": "devkitarm",
+      "targets": [
+        "3dsx"
+      ]
+    },
+    {
+      "name": "cia",
+      "configurePreset": "devkitarm",
+      "targets": [
+        "cia"
+      ]
+    },
+    {
+      "name": "3ds",
+      "configurePreset": "devkitarm",
+      "targets": [
+        "3ds"
+      ]
+    },
+    {
+      "name": "elf",
+      "configurePreset": "devkitarm",
+      "targets": [
+        "elf"
+      ]
+    },
+    {
+      "name": "release",
+      "configurePreset": "devkitarm",
+      "targets": [
+        "release"
+      ]
+    }
+  ]
+}

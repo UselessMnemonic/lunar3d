@@ -7,6 +7,14 @@ ENV PATH=/opt/devkitpro/tools/bin:/opt/devkitpro/devkitARM/bin:${PATH}
 RUN <<EOF
   set -eu
 
+  apt-get update
+  apt-get install -y --no-install-recommends clang-format cmake ninja-build
+  rm -rf /var/lib/apt/lists/*
+EOF
+
+RUN <<EOF
+  set -eu
+
   git clone https://github.com/Epicpkmn11/bannertool /tmp/bannertool
   cd /tmp/bannertool
   git checkout 51dac927a4c43de769900d91fd3cb6142295263f
@@ -42,4 +50,7 @@ WORKDIR /workspace/lunar3d
 FROM toolchain AS ci
 
 COPY . /workspace/lunar3d
-RUN make 3dsx cia
+WORKDIR /workspace/lunar3d
+RUN cmake --preset devkitarm
+RUN cmake --build --preset 3dsx
+RUN cmake --build --preset cia

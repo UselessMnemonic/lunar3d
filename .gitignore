@@ -1,13 +1,28 @@
 .DS_Store
-build/
-dist/
-output/
+
+# Build output directories
+/build/
+/build-*/
+/build-cmake/
+/cmake-build-*/
+/out/
+/output/
+/dist/
+
+# Local CMake user state
+/CMakeUserPresets.json
+
+# Generated build artifacts
 *.3dsx
 *.cia
 *.3ds
 *.elf
 *.smdh
+*.lst
 *.map
 *.o
 *.d
-external/*
+
+# IDEs
+/.vscode/
+/.idea/

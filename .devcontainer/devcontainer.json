@@ -6,6 +6,7 @@
     "target": "dev"
   },
   "remoteUser": "root",
+  "containerUser": "root",
   "workspaceFolder": "/workspace/lunar3d",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/lunar3d,type=bind,consistency=cached",
   "customizations": {
