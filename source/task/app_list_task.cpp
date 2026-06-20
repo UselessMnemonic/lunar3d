@@ -4,11 +4,6 @@
 
 namespace lunar3d {
 namespace task {
-namespace {
-
-constexpr u64 AppListTimeoutNanoseconds = 2ULL * 1000ULL * 1000ULL * 1000ULL;
-
-} // namespace
 
 AppListResult AppListTask::operator()() {
     if (request_.host.address.empty() || request_.identity.uniqueId.empty()) {
@@ -19,7 +14,7 @@ AppListResult AppListTask::operator()() {
     moonlight::NvClient client(config, request_.identity);
     std::string response;
 
-    moonlight::NvResult nvResult = client.appList(response, AppListTimeoutNanoseconds);
+    moonlight::NvResult nvResult = client.appList(response);
     if (!moonlight::succeeded(nvResult)) {
         return nvResult;
     }

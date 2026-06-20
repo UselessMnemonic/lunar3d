@@ -39,7 +39,6 @@ public:
 
     NvResult serverInfo(bool secure, std::string& response) const;
     NvResult appList(std::string& response) const;
-    NvResult appList(std::string& response, u64 timeoutNanoseconds) const;
     NvResult unpair(std::string& response) const;
 
     NvResult pairGetServerCertificate(const std::string& saltHex,
