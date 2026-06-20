@@ -27,8 +27,8 @@ using NvResult = std::variant<NvOk, NvHttpServiceError,
                                    NvHttpStatusError>;
 
 struct NvClientConfig {
-    Host host;
-    std::string clientUuid;
+    const Host& host;
+    const std::string& clientUuid;
     std::string deviceName = "roth";
     bool verifyServerCertificate = false;
 };
@@ -39,6 +39,7 @@ public:
 
     NvResult serverInfo(bool secure, std::string& response) const;
     NvResult appList(std::string& response) const;
+    NvResult appList(std::string& response, u64 timeoutNanoseconds) const;
     NvResult unpair(std::string& response) const;
 
     NvResult pairGetServerCertificate(const std::string& saltHex,

@@ -22,8 +22,10 @@ struct ClientIdentity {
     std::vector<u8> certificateDer;
     std::vector<u8> privateKeyDer;
 
+    static ClientIdentityResult load(const std::string& directory, ClientIdentity& result);
+
+  private:
     static ClientIdentityResult generate(ClientIdentity& identity);
-    static ClientIdentityResult load(const std::string& directory, ClientIdentity& identity);
     static ClientIdentityResult store(const std::string& directory, const ClientIdentity& identity);
 };
 

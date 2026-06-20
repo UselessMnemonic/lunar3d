@@ -20,7 +20,6 @@ template <typename T,
           typename Renderer = StringListItemRenderer<T> >
 class List : public Component {
 public:
-    typedef std::function<void(size_t, const T&)> ItemClickListener;
     typedef std::function<void(size_t, const T&)> ItemSelectedListener;
 
     List();
@@ -32,7 +31,6 @@ public:
     const Source& itemSource() const;
     Renderer& itemRenderer();
     const Renderer& itemRenderer() const;
-    void setOnItemClickListener(ItemClickListener listener);
     void setOnItemSelectedListener(ItemSelectedListener listener);
     void setRowHeight(float rowHeight);
     size_t getCount() const;
@@ -47,14 +45,12 @@ private:
     size_t visibleRowCount() const;
     bool navigateBy(int delta);
     bool selectIndex(size_t index);
-    bool activateSelected();
     void ensureSelectedVisible();
     void clampSelectedIndex();
 
     Rect bounds_;
     Source source_;
     Renderer renderer_;
-    ItemClickListener onItemClickListener_;
     ItemSelectedListener onItemSelectedListener_;
     float rowHeight_ = 32.0f;
     size_t firstVisibleIndex_ = 0;
@@ -101,11 +97,6 @@ const Renderer& List<T, Source, Renderer>::itemRenderer() const {
 }
 
 template <typename T, typename Source, typename Renderer>
-void List<T, Source, Renderer>::setOnItemClickListener(ItemClickListener listener) {
-    onItemClickListener_ = listener;
-}
-
-template <typename T, typename Source, typename Renderer>
 void List<T, Source, Renderer>::setOnItemSelectedListener(ItemSelectedListener listener) {
     onItemSelectedListener_ = listener;
 }
@@ -148,10 +139,6 @@ bool List<T, Source, Renderer>::onKeyEvent(const KeyEvent& event) {
 
     if (event.key == KEY_DDOWN) {
         return navigateBy(1);
-    }
-
-    if (event.key == KEY_A) {
-        return activateSelected();
     }
 
     return false;
@@ -224,25 +211,6 @@ bool List<T, Source, Renderer>::selectIndex(size_t index) {
 
     if (onItemSelectedListener_) {
         onItemSelectedListener_(index, *item);
-    }
-
-    return true;
-}
-
-template <typename T, typename Source, typename Renderer>
-bool List<T, Source, Renderer>::activateSelected() {
-    if (selectedIndex_ < 0) {
-        return false;
-    }
-
-    const size_t index = static_cast<size_t>(selectedIndex_);
-    const T* item = getItem(index);
-    if (!item) {
-        return false;
-    }
-
-    if (onItemClickListener_) {
-        onItemClickListener_(index, *item);
     }
 
     return true;

@@ -16,10 +16,11 @@ namespace lunar3d {
 namespace task {
 
 struct PairRequest {
-    moonlight::Host host;
-    moonlight::ClientIdentity identity;
-    std::string clientUuid;
-    std::string pin;
+    PairRequest(const std::string& hostAddress, const moonlight::ClientIdentity& identity)
+        : hostAddress(hostAddress), identity(identity) {}
+
+    const std::string& hostAddress;
+    const moonlight::ClientIdentity& identity;
 };
 
 struct PairStarted {};
@@ -45,7 +46,7 @@ using PairResult =
 const char* toString(const PairResult& result);
 
 constexpr size_t PairRequestCapacity = 1;
-constexpr size_t PairResultCapacity = 1;
+constexpr size_t PairResultCapacity = 3;
 
 class PairTask {
   public:
@@ -53,7 +54,7 @@ class PairTask {
              Channel<PairResult, PairResultCapacity>& results)
         : requests_(requests), results_(results) {}
 
-    void run();
+    void operator()();
 
   private:
     PairResult pair(PairRequest& request);

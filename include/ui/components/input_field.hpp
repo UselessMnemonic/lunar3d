@@ -30,7 +30,7 @@ public:
     void setEnabled(bool enabled);
     void setOnValueChangeListener(OnValueChangeListener listener);
     bool enabled() const;
-    const std::string& text() const;
+    const std::string& data() const;
     bool onTouchEvent(const TouchEvent& event) override;
     bool render(C3D_RenderTarget& target) const override;
 
@@ -93,7 +93,7 @@ bool InputField<MaxUtf16>::enabled() const {
 }
 
 template<size_t MaxUtf16>
-const std::string& InputField<MaxUtf16>::text() const {
+const std::string& InputField<MaxUtf16>::data() const {
     return text_;
 }
 
@@ -136,7 +136,7 @@ bool InputField<MaxUtf16>::render(C3D_RenderTarget& target) const {
 template<size_t MaxUtf16>
 bool InputField<MaxUtf16>::openKeyboard() {
     static_assert(MaxUtf16 > 0);
-    constexpr std::size_t BufferSize = MaxUtf16 * 3 + 1;
+    constexpr size_t BufferSize = MaxUtf16 * 3 + 1;
     std::array<char, BufferSize> buffer {};
 
     SwkbdState keyboard;

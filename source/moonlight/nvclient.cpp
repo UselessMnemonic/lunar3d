@@ -48,7 +48,11 @@ NvResult NvClient::serverInfo(bool secure, std::string& response) const {
 }
 
 NvResult NvClient::appList(std::string& response) const {
-    return get(true, "/applist?" + baseQuery(), response, RequestTimeoutNanoseconds);
+    return appList(response, RequestTimeoutNanoseconds);
+}
+
+NvResult NvClient::appList(std::string& response, u64 timeoutNanoseconds) const {
+    return get(true, "/applist?" + baseQuery(), response, timeoutNanoseconds);
 }
 
 NvResult NvClient::unpair(std::string& response) const {

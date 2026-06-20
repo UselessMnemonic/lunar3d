@@ -339,19 +339,20 @@ end:
     return ClientIdentityResult::Ok;
 }
 
-ClientIdentityResult ClientIdentity::load(const std::string& directory, ClientIdentity& identity) {
-    ClientIdentityResult result = loadStoredIdentity(directory, identity);
-    if (result == ClientIdentityResult::Ok) {
-        return result;
+ClientIdentityResult ClientIdentity::load(const std::string& directory,
+                                          ClientIdentity& identity) {
+    ClientIdentityResult status = loadStoredIdentity(directory, identity);
+    if (status == ClientIdentityResult::Ok) {
+        return status;
     }
 
-    if (result != ClientIdentityResult::IoError) {
-        return result;
+    if (status != ClientIdentityResult::IoError) {
+        return status;
     }
 
-    result = generate(identity);
-    if (result != ClientIdentityResult::Ok) {
-        return result;
+    status = generate(identity);
+    if (status != ClientIdentityResult::Ok) {
+        return status;
     }
 
     return store(directory, identity);

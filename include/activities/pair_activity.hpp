@@ -17,8 +17,11 @@ namespace lunar3d {
 namespace activities {
 
 class PairActivity : public ui::Activity {
+
+  using PairWorker = task::Worker<void, task::PairTask>;
+
   public:
-    PairActivity(moonlight::ClientIdentity& identity, moonlight::HostList& hostList);
+    PairActivity(const moonlight::ClientIdentity& identity, moonlight::HostList& hostList);
     ~PairActivity() override;
     void onStart() override;
     void onStop() override;
@@ -37,7 +40,7 @@ class PairActivity : public ui::Activity {
     bool addPairedHost(const moonlight::Host& host);
     void setStatus(const char* text);
 
-    moonlight::ClientIdentity& identity_;
+    const moonlight::ClientIdentity& identity_;
     moonlight::HostList& hostList_;
     ui::components::Label titleLabel_;
     ui::components::InputField<64> hostInput_;
@@ -49,7 +52,7 @@ class PairActivity : public ui::Activity {
     ui::components::Label footerLabel_;
     task::Channel<task::PairRequest, task::PairRequestCapacity>* pairRequests_ = nullptr;
     task::Channel<task::PairResult, task::PairResultCapacity>* pairResults_ = nullptr;
-    task::Worker<void, task::PairTask>* pairWorker_ = nullptr;
+    std::unique_ptr<PairWorker> pairWorker_ = nullptr;
     PairUiState uiState_ = PairUiState::Idle;
     bool pairing_ = false;
 };

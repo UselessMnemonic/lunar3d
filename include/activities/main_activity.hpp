@@ -1,5 +1,6 @@
 #pragma once
 
+#include "activities/app_picker_activity.hpp"
 #include "activities/delete_activity.hpp"
 #include "activities/pair_activity.hpp"
 #include "moonlight/client_identity.hpp"
@@ -25,12 +26,14 @@ class MainActivity : public ui::Activity {
     void refreshHostList();
     int selectedHostIndex() const;
 
-    moonlight::ClientIdentity identity_;
+    moonlight::ClientIdentityResult identityResult_ = moonlight::ClientIdentityResult::Ok;
+    const moonlight::ClientIdentity identity_;
     ui::ActivityManager& activityManager_;
     moonlight::HostList hostList_;
 
     PairActivity pairActivity_;
     DeleteActivity deleteActivity_;
+    AppPickerActivity appPickerActivity_;
 
     ui::components::Label headerLabel_;
     ui::components::Label updateLabel_;

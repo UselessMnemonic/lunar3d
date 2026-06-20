@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -440,18 +441,18 @@ void updateHostFromServerInfo(moonlight::Host& host, const moonlight::GameStream
 }
 
 bool isValidPairRequest(const PairRequest& request) {
-    return !request.host.address.empty() && !request.clientUuid.empty() &&
-           !request.identity.uniqueId.empty();
+    return !request.hostAddress.empty() && !request.identity.uniqueId.empty();
 }
 
 PairResult completePairingWithPin(const PairRequest& request, moonlight::Host& host,
                                   moonlight::NvClient& client,
-                                  const moonlight::GameStreamServerInfo& info) {
+                                  const moonlight::GameStreamServerInfo& info,
+                                  const std::string& pin) {
     const PairHash hash = pairHashForVersion(info.appversion);
 
     std::vector<u8> salt;
     std::vector<u8> aesKey;
-    if (!randomBytes(salt, SaltBytes) || !generateAesKey(hash, salt, request.pin, aesKey)) {
+    if (!randomBytes(salt, SaltBytes) || !generateAesKey(hash, salt, pin, aesKey)) {
         return PairFailed{};
     }
 
@@ -647,34 +648,26 @@ PairResult completePairingWithPin(const PairRequest& request, moonlight::Host& h
 
 } // namespace
 
-void PairTask::run() {
-    PairRequest request;
-    while (requests_.receive(request)) {
-        if (!results_.send(PairStarted{})) {
-            break;
-        }
+void PairTask::operator()() {
+    while (std::optional<PairRequest> request = requests_.receive()) {
+        results_.send(PairStarted{});
 
-        if (!isValidPairRequest(request)) {
-            if (!results_.send(PairInvalidRequest{})) {
-                break;
-            }
+        if (!isValidPairRequest(*request)) {
+            results_.send(PairInvalidRequest{});
             continue;
         }
 
-        PairResult result = pair(request);
-        if (!results_.send(std::move(result))) {
-            break;
-        }
+        PairResult result = pair(*request);
+        results_.send(std::move(result));
     }
 
     results_.close();
 }
 
 PairResult PairTask::pair(PairRequest& request) {
-    moonlight::Host host = request.host;
-    moonlight::NvClientConfig config;
-    config.host = request.host;
-    config.clientUuid = request.clientUuid;
+    moonlight::Host host;
+    host.address = request.hostAddress;
+    moonlight::NvClientConfig config{host, request.identity.uniqueId};
     moonlight::NvClient client(config, request.identity);
 
     std::string response;
@@ -700,14 +693,10 @@ PairResult PairTask::pairWithServerInfo(PairRequest& request, moonlight::Host& h
         return PairSuccess{host};
     }
 
-    if (request.pin.empty()) {
-        request.pin = generatePin();
-        if (!results_.send(PairPinRequired{request.pin})) {
-            return PairFailed{};
-        }
-    }
+    const std::string pin = generatePin();
+    results_.send(PairPinRequired{pin});
 
-    return completePairingWithPin(request, host, client, info);
+    return completePairingWithPin(request, host, client, info, pin);
 }
 
 const char* toString(const PairResult& result) {

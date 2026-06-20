@@ -21,9 +21,21 @@ const ui::Rect TopContentBounds(16.0f, 48.0f, 368.0f, 152.0f);
 
 } // namespace
 
+namespace {
+
+moonlight::ClientIdentity loadClientIdentity(moonlight::ClientIdentityResult& result) {
+    moonlight::ClientIdentity identity;
+    result = moonlight::ClientIdentity::load(IdentityDirectory, identity);
+    return identity;
+}
+
+} // namespace
+
 MainActivity::MainActivity(ui::ActivityManager& activityManager)
-    : activityManager_(activityManager), hostList_(HostListDirectory),
+    : identity_(loadClientIdentity(identityResult_)), activityManager_(activityManager),
+      hostList_(HostListDirectory),
       pairActivity_(identity_, hostList_), deleteActivity_(hostList_),
+      appPickerActivity_(identity_),
       headerLabel_("Lunar3D", ui::Point(8.0f, 8.0f), ui::style::typography::TitleScale,
                    ui::style::colors::Text),
       updateLabel_("Update: 0 ms", ui::Point(8.0f, 8.0f), ui::style::typography::BodyScale,
@@ -33,12 +45,10 @@ MainActivity::MainActivity(ui::ActivityManager& activityManager)
       heroBanner_(TopContentBounds, "No hosts paired") {
     setBackgroundColors(ui::style::colors::TopBackground, ui::style::colors::BottomBackground);
 
-    const moonlight::ClientIdentityResult identityResult =
-        moonlight::ClientIdentity::load(IdentityDirectory, identity_);
-    if (identityResult != moonlight::ClientIdentityResult::Ok) {
+    if (identityResult_ != moonlight::ClientIdentityResult::Ok) {
         char message[96];
         std::snprintf(message, sizeof(message), "Could not load identity: %s",
-                      moonlight::toString(identityResult));
+                      moonlight::toString(identityResult_));
         heroBanner_.setMessage(message);
         addComponent(GFX_TOP, heroBanner_);
         return;
@@ -117,6 +127,17 @@ int MainActivity::selectedHostIndex() const {
 bool MainActivity::onKeyEvent(const ui::KeyEvent& event) {
     if (!ready_) {
         return Activity::onKeyEvent(event);
+    }
+
+    if (event.action == ui::KeyAction::Down && event.key == KEY_A) {
+        const int index = selectedHostIndex();
+        const moonlight::Host* host =
+            index >= 0 ? hostList_.get(static_cast<size_t>(index)) : nullptr;
+        if (host) {
+            appPickerActivity_.setHost(*host);
+            activityManager_.launch(appPickerActivity_);
+        }
+        return true;
     }
 
     if (event.action == ui::KeyAction::Down && event.key == KEY_Y) {

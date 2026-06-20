@@ -8,13 +8,14 @@
 #include "ui/style/typography.hpp"
 
 #include <cstdio>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
 
 namespace lunar3d {
 namespace activities {
-PairActivity::PairActivity(moonlight::ClientIdentity& identity, moonlight::HostList& hostList)
+PairActivity::PairActivity(const moonlight::ClientIdentity& identity, moonlight::HostList& hostList)
     : identity_(identity), hostList_(hostList),
       titleLabel_("Pair Host", ui::Point(8.0f, 8.0f), ui::style::typography::TitleScale,
                   ui::style::colors::Text),
@@ -94,10 +95,9 @@ void PairActivity::startPairRuntime() {
 
     pairRequests_ = new task::Channel<task::PairRequest, task::PairRequestCapacity>();
     pairResults_ = new task::Channel<task::PairResult, task::PairResultCapacity>();
-    pairWorker_ =
-        new task::Worker<void, task::PairTask>(task::PairTask(*pairRequests_, *pairResults_));
+    pairWorker_ = task::launch(task::PairTask(*pairRequests_, *pairResults_));
 
-    if (!pairWorker_->started()) {
+    if (!pairWorker_) {
         setStatus("Could not start pairing task");
         statusLabel_.setVisible(true);
         shutdownPairRuntime();
@@ -105,14 +105,11 @@ void PairActivity::startPairRuntime() {
 }
 
 void PairActivity::launchPair() {
-    if (pairing_ || hostInput_.text().empty()) {
+    if (pairing_ || hostInput_.data().empty()) {
         return;
     }
 
-    task::PairRequest request;
-    request.host.address = hostInput_.text();
-    request.identity = identity_;
-    request.clientUuid = identity_.uniqueId;
+    task::PairRequest request(hostInput_.data(), identity_);
 
     pairing_ = pairRequests_ && pairRequests_->trySend(std::move(request));
     if (pairing_) {
@@ -134,7 +131,7 @@ void PairActivity::applyUiState(PairUiState state) {
     hostInput_.setEnabled(state == PairUiState::Idle);
     pairButton_.setLabel("Pair");
     footerLabel_.setVisible(state == PairUiState::Idle);
-    pairButton_.setEnabled(uiState_ == PairUiState::Idle && !hostInput_.text().empty());
+    pairButton_.setEnabled(uiState_ == PairUiState::Idle && !hostInput_.data().empty());
 }
 
 void PairActivity::shutdownPairRuntime() {
@@ -143,8 +140,7 @@ void PairActivity::shutdownPairRuntime() {
     }
     if (pairWorker_) {
         pairWorker_->join();
-        delete pairWorker_;
-        pairWorker_ = nullptr;
+        pairWorker_.reset();
     }
 
     delete pairResults_;
@@ -159,12 +155,12 @@ void PairActivity::inspectPairResult() {
         return;
     }
 
-    task::PairResult result;
-    if (!pairResults_->tryReceive(result)) {
+    std::optional<task::PairResult> result = pairResults_->tryReceive();
+    if (!result) {
         return;
     }
 
-    handlePairResult(result);
+    handlePairResult(*result);
     pairing_ = false;
 }
 

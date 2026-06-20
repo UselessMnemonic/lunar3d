@@ -4,174 +4,329 @@
 
 #include <cstddef>
 #include <functional>
-#include <new>
+#include <memory>
+#include <optional>
 #include <type_traits>
 #include <utility>
 
 namespace lunar3d {
 namespace task {
 
-template <typename TResult, typename TRunnable = std::function<TResult()>> class Worker {
-  public:
-    explicit Worker(TRunnable runnable, size_t stackSizeBytes = 32 * 1024,
-                    int threadPriority = 0x31, int processorAffinity = -2)
-        : runnable_(std::move(runnable)) {
-        LightLock_Init(&lock_);
-        thread_ = threadCreate(threadEntry, this, stackSizeBytes, threadPriority, processorAffinity,
-                               false);
+struct WorkerOptions {
+    size_t stackSizeBytes = 32 * 1024;
+    int threadPriority = 0x31;
+    int processorAffinity = -2;
+};
+
+namespace detail {
+
+template <size_t Length>
+[[noreturn]]
+inline void workerPanic(const char (&message)[Length]) noexcept {
+    static_assert(Length > 1, "Panic message must not be empty");
+
+    svcOutputDebugString(
+        message,
+        static_cast<s32>(Length - 1)
+    );
+
+    svcBreak(USERBREAK_PANIC);
+    svcExitProcess();
+
+    __builtin_unreachable();
+}
+
+inline void joinThread(::Thread& thread) noexcept {
+    if (thread == nullptr) {
+        workerPanic(
+            "lunar3d::task::Worker::join: worker already joined"
+        );
     }
 
-    ~Worker() {
-        join();
-        destroyResult();
+    if (threadGetCurrent() == thread) {
+        workerPanic(
+            "lunar3d::task::Worker::join: worker cannot join itself"
+        );
     }
 
-    Worker(const Worker&) = delete;
-    Worker& operator=(const Worker&) = delete;
+    const Result result = threadJoin(thread, U64_MAX);
 
-    bool started() const {
-        return thread_ != nullptr;
+    if (R_FAILED(result)) {
+        workerPanic(
+            "lunar3d::task::Worker::join: thread wait failed"
+        );
     }
 
-    bool completed() const {
-        LightLock_Lock(&lock_);
-        const bool result = completed_;
-        LightLock_Unlock(&lock_);
-        return result;
+    threadFree(thread);
+    thread = nullptr;
+}
+
+inline bool tryJoinThread(::Thread& thread) noexcept {
+    if (thread == nullptr) {
+        workerPanic(
+            "lunar3d::task::Worker::tryJoin: worker already joined"
+        );
     }
 
-    bool takeResult(TResult& result) {
-        LightLock_Lock(&lock_);
-        if (!hasResult_) {
-            LightLock_Unlock(&lock_);
-            return false;
-        }
+    if (threadGetCurrent() == thread) {
+        workerPanic(
+            "lunar3d::task::Worker::tryJoin: worker cannot join itself"
+        );
+    }
 
-        result = std::move(*storedResult());
-        storedResult()->~TResult();
-        hasResult_ = false;
-        LightLock_Unlock(&lock_);
+    const Result result = threadJoin(thread, 0);
+
+    if (result == 0) {
+        threadFree(thread);
+        thread = nullptr;
         return true;
     }
 
-    void join() {
-        if (!thread_) {
-            return;
+    if (R_DESCRIPTION(result) == RD_TIMEOUT) {
+        return false;
+    }
+
+    workerPanic(
+        "lunar3d::task::Worker::tryJoin: thread wait failed"
+    );
+}
+
+} // namespace detail
+
+template <typename TResult, typename TTask>
+class Worker {
+public:
+    using Pointer = std::unique_ptr<Worker>;
+
+    static_assert(
+        std::is_object<TResult>::value,
+        "Worker result must be an object type"
+    );
+
+    static_assert(
+        std::is_move_constructible<TResult>::value,
+        "Worker result must be move-constructible"
+    );
+
+    static_assert(
+        std::is_invocable_r<TResult, TTask&>::value,
+        "Worker task must be callable with no arguments "
+        "and produce TResult"
+    );
+
+    template <typename Task>
+    [[nodiscard]]
+    static Pointer launch(
+        Task&& task,
+        WorkerOptions options = WorkerOptions{}
+    ) {
+        Pointer worker{
+            new Worker(std::forward<Task>(task))
+        };
+
+        if (!worker->start(options)) {
+            return nullptr;
         }
 
-        threadJoin(thread_, U64_MAX);
-        threadFree(thread_);
-        thread_ = nullptr;
-    }
-
-  private:
-    static void threadEntry(void* argument) {
-        static_cast<Worker*>(argument)->run();
-    }
-
-    void run() {
-        TResult result = runRunnable();
-
-        LightLock_Lock(&lock_);
-        new (&result_) TResult(std::move(result));
-        hasResult_ = true;
-        completed_ = true;
-        LightLock_Unlock(&lock_);
-    }
-
-    TResult* storedResult() {
-        return reinterpret_cast<TResult*>(&result_);
-    }
-
-    void destroyResult() {
-        LightLock_Lock(&lock_);
-        if (hasResult_) {
-            storedResult()->~TResult();
-            hasResult_ = false;
-        }
-        LightLock_Unlock(&lock_);
-    }
-
-    TResult runRunnable() {
-        if constexpr (requires(TRunnable & runnable) { runnable.run(); }) {
-            return runnable_.run();
-        } else {
-            return runnable_();
-        }
-    }
-
-    TRunnable runnable_;
-    typename std::aligned_storage<sizeof(TResult), alignof(TResult)>::type result_;
-    mutable LightLock lock_;
-    ::Thread thread_ = nullptr;
-    bool completed_ = false;
-    bool hasResult_ = false;
-};
-
-template <typename TRunnable> class Worker<void, TRunnable> {
-  public:
-    explicit Worker(TRunnable runnable, size_t stackSizeBytes = 32 * 1024,
-                    int threadPriority = 0x31, int processorAffinity = -2)
-        : runnable_(std::move(runnable)) {
-        LightLock_Init(&lock_);
-        thread_ = threadCreate(threadEntry, this, stackSizeBytes, threadPriority, processorAffinity,
-                               false);
+        return worker;
     }
 
     ~Worker() {
-        join();
+        if (thread_ != nullptr) {
+            detail::workerPanic(
+                "lunar3d::task::Worker::~Worker: worker not joined"
+            );
+        }
     }
 
     Worker(const Worker&) = delete;
     Worker& operator=(const Worker&) = delete;
 
-    bool started() const {
+    Worker(Worker&&) = delete;
+    Worker& operator=(Worker&&) = delete;
+
+    [[nodiscard]]
+    TResult join() {
+        detail::joinThread(thread_);
+        return takeResult();
+    }
+
+    [[nodiscard]]
+    std::optional<TResult> tryJoin() {
+        if (!detail::tryJoinThread(thread_)) {
+            return std::nullopt;
+        }
+
+        return std::optional<TResult>{
+            std::in_place,
+            takeResult()
+        };
+    }
+
+private:
+    template <typename Task>
+    explicit Worker(Task&& task)
+        : task_(std::forward<Task>(task)) {
+    }
+
+    bool start(const WorkerOptions& options) noexcept {
+        thread_ = threadCreate(
+            &Worker::threadEntry,
+            this,
+            options.stackSizeBytes,
+            options.threadPriority,
+            options.processorAffinity,
+            false
+        );
+
         return thread_ != nullptr;
     }
 
-    bool completed() const {
-        LightLock_Lock(&lock_);
-        const bool result = completed_;
-        LightLock_Unlock(&lock_);
-        return result;
-    }
-
-    void join() {
-        if (!thread_) {
-            return;
-        }
-
-        threadJoin(thread_, U64_MAX);
-        threadFree(thread_);
-        thread_ = nullptr;
-    }
-
-  private:
     static void threadEntry(void* argument) {
         static_cast<Worker*>(argument)->run();
     }
 
     void run() {
-        runRunnable();
-
-        LightLock_Lock(&lock_);
-        completed_ = true;
-        LightLock_Unlock(&lock_);
+        result_.emplace(std::invoke(task_));
     }
 
-    void runRunnable() {
-        if constexpr (requires(TRunnable & runnable) { runnable.run(); }) {
-            runnable_.run();
-        } else {
-            runnable_();
+    TResult takeResult() {
+        if (!result_) {
+            detail::workerPanic(
+                "lunar3d::task::Worker::join: result already received"
+            );
+        }
+
+        TResult value(std::move(*result_));
+        result_.reset();
+        return value;
+    }
+
+    TTask task_;
+    std::optional<TResult> result_;
+    ::Thread thread_ = nullptr;
+};
+
+template <typename TTask>
+class Worker<void, TTask> {
+public:
+    using Pointer = std::unique_ptr<Worker>;
+
+    static_assert(
+        std::is_invocable_r<void, TTask&>::value,
+        "Worker task must be callable with no arguments"
+    );
+
+    template <typename Task>
+    [[nodiscard]]
+    static Pointer launch(
+        Task&& task,
+        WorkerOptions options = WorkerOptions{}
+    ) {
+        Pointer worker{
+            new Worker(std::forward<Task>(task))
+        };
+
+        if (!worker->start(options)) {
+            return nullptr;
+        }
+
+        return worker;
+    }
+
+    ~Worker() {
+        if (thread_ != nullptr) {
+            detail::workerPanic(
+                "lunar3d::task::Worker::~Worker: worker not joined"
+            );
         }
     }
 
-    TRunnable runnable_;
-    mutable LightLock lock_;
+    Worker(const Worker&) = delete;
+    Worker& operator=(const Worker&) = delete;
+
+    Worker(Worker&&) = delete;
+    Worker& operator=(Worker&&) = delete;
+
+    void join() {
+        detail::joinThread(thread_);
+    }
+
+    [[nodiscard]]
+    bool tryJoin() {
+        return detail::tryJoinThread(thread_);
+    }
+
+private:
+    template <typename Task>
+    explicit Worker(Task&& task)
+        : task_(std::forward<Task>(task)) {
+    }
+
+    bool start(const WorkerOptions& options) noexcept {
+        thread_ = threadCreate(
+            &Worker::threadEntry,
+            this,
+            options.stackSizeBytes,
+            options.threadPriority,
+            options.processorAffinity,
+            false
+        );
+
+        return thread_ != nullptr;
+    }
+
+    static void threadEntry(void* argument) {
+        static_cast<Worker*>(argument)->run();
+    }
+
+    void run() {
+        std::invoke(task_);
+    }
+
+    TTask task_;
     ::Thread thread_ = nullptr;
-    bool completed_ = false;
 };
+
+template <typename Task>
+[[nodiscard]]
+auto launchWorker(
+    Task&& task,
+    WorkerOptions options = WorkerOptions{}
+) {
+    using StoredTask =
+        typename std::decay<Task>::type;
+
+    using Result =
+        typename std::invoke_result<StoredTask&>::type;
+
+    static_assert(
+        std::is_void<Result>::value ||
+        std::is_object<Result>::value,
+        "Worker task must return void or an object by value"
+    );
+
+    return Worker<Result, StoredTask>::launch(
+        std::forward<Task>(task),
+        options
+    );
+}
+
+template <typename Task>
+[[nodiscard]]
+auto launch(
+    Task&& task,
+    WorkerOptions options = WorkerOptions{}
+) {
+    using StoredTask = typename std::decay<Task>::type;
+    using Result =
+        typename std::invoke_result<StoredTask&>::type;
+
+    return Worker<Result, StoredTask>::launch(
+        std::forward<Task>(task),
+        options
+    );
+}
 
 } // namespace task
 } // namespace lunar3d
