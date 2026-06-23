@@ -24,8 +24,10 @@ std::string hostDisplayName(const moonlight::Host& host) {
 
 } // namespace
 
-AppPickerActivity::AppPickerActivity(const moonlight::ClientIdentity& identity)
+AppPickerActivity::AppPickerActivity(const moonlight::ClientIdentity& identity, ui::ActivityManager& activityManager)
     : identity_(identity),
+      activityManager_(activityManager),
+      streamActivity_(identity),
       titleLabel_("Apps", ui::Point(8.0f, 8.0f), ui::style::typography::TitleScale,
                   ui::style::colors::Text),
       footerLabel_("", ui::Point(16.0f, 212.0f), ui::style::typography::BodyScale,
@@ -76,6 +78,18 @@ void AppPickerActivity::onStop() {
 }
 
 bool AppPickerActivity::onKeyEvent(const ui::KeyEvent& event) {
+    if (event.action == ui::KeyAction::Down && event.key == KEY_A) {
+        const int index = appListView_.getSelectedItemPosition();
+        if (index >= 0 && static_cast<size_t>(index) < apps_.size()) {
+            const moonlight::GameStreamApp& app = apps_[index];
+            if (host_) {
+                streamActivity_.setHostAndApp(*host_, app);
+                activityManager_.launch(streamActivity_);
+            }
+        }
+        return true;
+    }
+
     if (event.action == ui::KeyAction::Down && event.key == KEY_B) {
         finish();
         return true;
@@ -179,6 +193,8 @@ void AppPickerActivity::showApps(std::vector<moonlight::GameStreamApp>&& apps) {
 
 void AppPickerActivity::setFooter() {
     std::string footerMessage;
+    footerMessage += ui::glyphs::ButtonA;
+    footerMessage += " Launch   ";
     footerMessage += ui::glyphs::ButtonB;
     footerMessage += " Return";
     footerLabel_.setText(footerMessage.c_str());

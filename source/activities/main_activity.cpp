@@ -35,7 +35,7 @@ MainActivity::MainActivity(ui::ActivityManager& activityManager)
     : identity_(loadClientIdentity(identityResult_)), activityManager_(activityManager),
       hostList_(HostListDirectory),
       pairActivity_(identity_, hostList_), deleteActivity_(hostList_),
-      appPickerActivity_(identity_),
+      appPickerActivity_(identity_, activityManager),
       headerLabel_("Lunar3D", ui::Point(8.0f, 8.0f), ui::style::typography::TitleScale,
                    ui::style::colors::Text),
       updateLabel_("Update: 0 ms", ui::Point(8.0f, 8.0f), ui::style::typography::BodyScale,

@@ -17,6 +17,7 @@ constexpr u32 PanelPressed = C2D_Color32(63, 86, 112, 255);
 constexpr u32 PanelDisabled = C2D_Color32(28, 33, 41, 255);
 constexpr u32 Accent = C2D_Color32(84, 190, 142, 255);
 constexpr u32 AccentDisabled = C2D_Color32(67, 78, 91, 255);
+constexpr u32 Transparent = C2D_Color32(0, 0, 0, 0);
 
 } // namespace colors
 } // namespace style

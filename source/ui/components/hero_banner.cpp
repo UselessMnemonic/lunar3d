@@ -21,8 +21,17 @@ void HeroBanner::setMessage(const char* message) {
     C2D_TextOptimize(&message_);
 }
 
+void HeroBanner::setBackgroundColor(u32 color) {
+    backgroundColor_ = color;
+}
+
 bool HeroBanner::render(C3D_RenderTarget& target) const {
     (void)target;
+
+    if (backgroundColor_ != style::colors::Transparent) {
+        C2D_DrawRectSolid(bounds_.origin.x, bounds_.origin.y, 0.0f,
+                          bounds_.size.width, bounds_.size.height, backgroundColor_);
+    }
 
     float messageWidth = 0.0f;
     float messageHeight = 0.0f;
