@@ -8,7 +8,7 @@ namespace {
 
 constexpr u32 MaxResponseBytes = 1024 * 1024;
 constexpr u32 DownloadChunkBytes = 4096;
-constexpr u64 RequestTimeoutNanoseconds = 5ULL * 1000ULL * 1000ULL * 1000ULL;
+constexpr u64 RequestTimeoutNanoseconds = 6ULL * 1000ULL * 1000ULL * 1000ULL;
 constexpr u64 PairRequestTimeoutNanoseconds = 30ULL * 1000ULL * 1000ULL * 1000ULL;
 
 void appendHex(const u8* input, size_t size, std::string& output) {
@@ -48,11 +48,7 @@ NvResult NvClient::serverInfo(bool secure, std::string& response) const {
 }
 
 NvResult NvClient::appList(std::string& response) const {
-    return appList(response, RequestTimeoutNanoseconds);
-}
-
-NvResult NvClient::appList(std::string& response, u64 timeoutNanoseconds) const {
-    return get(true, "/applist?" + baseQuery(), response, timeoutNanoseconds);
+    return get(true, "/applist?" + baseQuery(), response, RequestTimeoutNanoseconds);
 }
 
 NvResult NvClient::unpair(std::string& response) const {
