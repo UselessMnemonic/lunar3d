@@ -1,8 +1,8 @@
 #pragma once
 
+#include "ui/component.hpp"
 #include "ui/components/iterator_list_source.hpp"
 #include "ui/components/string_list_item_renderer.hpp"
-#include "ui/component.hpp"
 #include "ui/rect.hpp"
 
 #include <3ds.h>
@@ -15,11 +15,10 @@ namespace lunar3d {
 namespace ui {
 namespace components {
 
-template <typename T,
-          typename Source = IteratorListSource<T>,
-          typename Renderer = StringListItemRenderer<T> >
+template <typename T, typename Source = IteratorListSource<T>,
+          typename Renderer = StringListItemRenderer<T>>
 class List : public Component {
-public:
+  public:
     typedef std::function<void(size_t, const T&)> ItemSelectedListener;
 
     List();
@@ -41,7 +40,7 @@ public:
     bool onKeyEvent(const KeyEvent& event) override;
     bool render(C3D_RenderTarget& target) const override;
 
-private:
+  private:
     size_t visibleRowCount() const;
     bool navigateBy(int delta);
     bool selectIndex(size_t index);
@@ -57,8 +56,7 @@ private:
     int selectedIndex_ = -1;
 };
 
-template <typename T, typename Source, typename Renderer>
-List<T, Source, Renderer>::List() {}
+template <typename T, typename Source, typename Renderer> List<T, Source, Renderer>::List() {}
 
 template <typename T, typename Source, typename Renderer>
 List<T, Source, Renderer>::List(Rect bounds) : bounds_(bounds) {}

@@ -12,7 +12,7 @@ namespace lunar3d {
 namespace ui {
 
 class Activity {
-public:
+  public:
     static constexpr int MaxComponents = 16;
 
     virtual ~Activity() {}
@@ -38,12 +38,12 @@ public:
     virtual void render(C3D_RenderTarget& target) const;
     u32 backgroundColor(gfxScreen_t screen) const;
 
-protected:
+  protected:
     bool addComponent(gfxScreen_t screen, Component& component);
     void setBackgroundColor(gfxScreen_t screen, u32 color);
     void setBackgroundColors(u32 topColor, u32 bottomColor);
 
-private:
+  private:
     struct ComponentEntry {
         gfxScreen_t screen = GFX_TOP;
         Component* component = nullptr;

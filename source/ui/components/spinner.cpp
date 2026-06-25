@@ -85,8 +85,7 @@ void Spinner::update(u64 deltaMilli) {
 
 bool Spinner::render(C3D_RenderTarget& target) const {
     (void)target;
-    C2D_DrawText(&text_, C2D_WithColor, position_.x, position_.y, 0.0f, scale_, scale_,
-                 color_);
+    C2D_DrawText(&text_, C2D_WithColor, position_.x, position_.y, 0.0f, scale_, scale_, color_);
     return true;
 }
 

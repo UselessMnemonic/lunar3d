@@ -11,8 +11,8 @@ Rect::Rect(float rectX, float rectY, float rectWidth, float rectHeight)
     : origin(rectX, rectY), size(rectWidth, rectHeight) {}
 
 bool Rect::contains(Point point) const {
-    return point.x >= origin.x && point.y >= origin.y &&
-           point.x < origin.x + size.width && point.y < origin.y + size.height;
+    return point.x >= origin.x && point.y >= origin.y && point.x < origin.x + size.width &&
+           point.y < origin.y + size.height;
 }
 
 } // namespace ui

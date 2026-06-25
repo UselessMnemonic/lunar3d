@@ -93,8 +93,8 @@ bool Button::onTouchEvent(const TouchEvent& event) {
     }
 
     if (event.action == TouchAction::Move) {
-        renderState_ = bounds_.contains(touchPoint) ? ButtonRenderState::Pressed
-                                                    : ButtonRenderState::Normal;
+        renderState_ =
+            bounds_.contains(touchPoint) ? ButtonRenderState::Pressed : ButtonRenderState::Normal;
         return true;
     }
 
@@ -132,12 +132,11 @@ bool Button::render(C3D_RenderTarget& target) const {
 
     C2D_DrawRectSolid(bounds_.origin.x, bounds_.origin.y, 0.0f, bounds_.size.width,
                       bounds_.size.height, fill);
-    C2D_DrawRectSolid(bounds_.origin.x, bounds_.origin.y, 0.0f,
-                      style::metrics::PanelAccentRule, bounds_.size.height, accent);
+    C2D_DrawRectSolid(bounds_.origin.x, bounds_.origin.y, 0.0f, style::metrics::PanelAccentRule,
+                      bounds_.size.height, accent);
     C2D_DrawText(&label_, C2D_WithColor, bounds_.origin.x + style::metrics::ButtonTextInsetX,
                  bounds_.origin.y + style::metrics::ButtonTextInsetY, 0.0f,
-                 style::typography::ControlScale, style::typography::ControlScale,
-                 textColor);
+                 style::typography::ControlScale, style::typography::ControlScale, textColor);
     return true;
 }
 

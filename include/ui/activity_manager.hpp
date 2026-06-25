@@ -6,7 +6,7 @@ namespace lunar3d {
 namespace ui {
 
 class ActivityManager {
-public:
+  public:
     static constexpr int MaxActivityDepth = 8;
 
     ActivityManager();
@@ -23,13 +23,8 @@ public:
     Activity* active();
     const Activity* active() const;
 
-private:
-    enum class State {
-        Empty,
-        Running,
-        Paused,
-        Stopped
-    };
+  private:
+    enum class State { Empty, Running, Paused, Stopped };
 
     struct Entry {
         Activity* activity = nullptr;

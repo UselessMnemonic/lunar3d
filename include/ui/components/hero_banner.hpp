@@ -12,7 +12,7 @@ namespace ui {
 namespace components {
 
 class HeroBanner : public Component {
-public:
+  public:
     HeroBanner(Rect bounds, const char* message);
     ~HeroBanner() override;
 
@@ -21,7 +21,7 @@ public:
 
     bool render(C3D_RenderTarget& target) const override;
 
-private:
+  private:
     C2D_TextBuf textBuffer_ = C2D_TextBufNew(256);
     C2D_Text message_;
     Rect bounds_;

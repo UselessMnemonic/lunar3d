@@ -12,23 +12,21 @@ namespace lunar3d {
 namespace activities {
 
 StreamActivity::StreamActivity(const moonlight::ClientIdentity& identity)
-    : identity_(identity),
-      overlayBanner_(ui::Rect(0.0f, 0.0f, 400.0f, 240.0f), "Starting..."),
+    : identity_(identity), overlayBanner_(ui::Rect(0.0f, 0.0f, 400.0f, 240.0f), "Starting..."),
       exitButton_("Exit Stream", ui::Rect(100.0f, 100.0f, 120.0f, 40.0f)) {
     setBackgroundColors(ui::style::colors::TopBackground, ui::style::colors::BottomBackground);
 
     // Dark slate gray with ~78% opacity (200/255)
     overlayBanner_.setBackgroundColor(C2D_Color32(17, 21, 27, 200));
 
-    exitButton_.setOnClickListener([this]() {
-        finish();
-    });
+    exitButton_.setOnClickListener([this]() { finish(); });
 
     addComponent(GFX_TOP, overlayBanner_);
     addComponent(GFX_BOTTOM, exitButton_);
 }
 
-void StreamActivity::setHostAndApp(const moonlight::Host& host, const moonlight::GameStreamApp& app) {
+void StreamActivity::setHostAndApp(const moonlight::Host& host,
+                                   const moonlight::GameStreamApp& app) {
     host_ = &host;
     app_ = app;
 }

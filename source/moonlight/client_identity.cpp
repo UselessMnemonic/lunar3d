@@ -339,8 +339,7 @@ end:
     return ClientIdentityResult::Ok;
 }
 
-ClientIdentityResult ClientIdentity::load(const std::string& directory,
-                                          ClientIdentity& identity) {
+ClientIdentityResult ClientIdentity::load(const std::string& directory, ClientIdentity& identity) {
     ClientIdentityResult status = loadStoredIdentity(directory, identity);
     if (status == ClientIdentityResult::Ok) {
         return status;

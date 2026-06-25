@@ -7,26 +7,22 @@ namespace lunar3d {
 namespace ui {
 namespace components {
 
-template <typename T>
-class IteratorListSource {
-public:
+template <typename T> class IteratorListSource {
+  public:
     IteratorListSource();
 
-    template <typename Iterator>
-    IteratorListSource(Iterator first, Iterator last);
+    template <typename Iterator> IteratorListSource(Iterator first, Iterator last);
 
-    template <typename Iterator>
-    void setItems(Iterator first, Iterator last);
+    template <typename Iterator> void setItems(Iterator first, Iterator last);
 
     size_t getCount() const;
     const T* getItem(size_t position) const;
 
-private:
+  private:
     std::vector<const T*> items_;
 };
 
-template <typename T>
-IteratorListSource<T>::IteratorListSource() {}
+template <typename T> IteratorListSource<T>::IteratorListSource() {}
 
 template <typename T>
 template <typename Iterator>
@@ -43,13 +39,11 @@ void IteratorListSource<T>::setItems(Iterator first, Iterator last) {
     }
 }
 
-template <typename T>
-size_t IteratorListSource<T>::getCount() const {
+template <typename T> size_t IteratorListSource<T>::getCount() const {
     return items_.size();
 }
 
-template <typename T>
-const T* IteratorListSource<T>::getItem(size_t position) const {
+template <typename T> const T* IteratorListSource<T>::getItem(size_t position) const {
     return position < items_.size() ? items_[position] : nullptr;
 }
 

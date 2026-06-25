@@ -21,10 +21,8 @@ struct NvHttpStatusError {
     u32 statusCode = 0;
 };
 
-using NvResult = std::variant<NvOk, NvHttpServiceError,
-                                   NvRequestError, NvTimedOut,
-                                   NvResponseTooLarge,
-                                   NvHttpStatusError>;
+using NvResult = std::variant<NvOk, NvHttpServiceError, NvRequestError, NvTimedOut,
+                              NvResponseTooLarge, NvHttpStatusError>;
 
 struct NvClientConfig {
     const Host& host;
@@ -34,25 +32,23 @@ struct NvClientConfig {
 };
 
 class NvClient {
-public:
+  public:
     NvClient(NvClientConfig config, const ClientIdentity& identity);
 
     NvResult serverInfo(bool secure, std::string& response) const;
     NvResult appList(std::string& response) const;
     NvResult unpair(std::string& response) const;
 
-    NvResult pairGetServerCertificate(const std::string& saltHex,
-                                           std::string& response) const;
-    NvResult pairSendClientChallenge(const std::string& challengeHex,
-                                          std::string& response) const;
+    NvResult pairGetServerCertificate(const std::string& saltHex, std::string& response) const;
+    NvResult pairSendClientChallenge(const std::string& challengeHex, std::string& response) const;
     NvResult pairSendServerChallengeResponse(const std::string& challengeResponseHex,
-                                                   std::string& response) const;
+                                             std::string& response) const;
     NvResult pairSendClientPairingSecret(const std::string& pairingSecretHex,
-                                              std::string& response) const;
+                                         std::string& response) const;
 
-private:
-    NvResult get(bool secure, const std::string& pathAndQuery,
-                      std::string& response, u64 timeoutNanoseconds) const;
+  private:
+    NvResult get(bool secure, const std::string& pathAndQuery, std::string& response,
+                 u64 timeoutNanoseconds) const;
     std::string baseQuery() const;
     std::string httpUrl(const std::string& pathAndQuery) const;
     std::string httpsUrl(const std::string& pathAndQuery) const;

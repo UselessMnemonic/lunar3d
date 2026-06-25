@@ -25,8 +25,7 @@ void appendHex(const u8* input, size_t size, std::string& output) {
 std::string certificateHex(const ClientIdentity& identity) {
     std::string output;
     appendHex(reinterpret_cast<const u8*>(identity.certificatePem.data()),
-              identity.certificatePem.size(),
-              output);
+              identity.certificatePem.size(), output);
     return output;
 }
 
@@ -56,7 +55,7 @@ NvResult NvClient::unpair(std::string& response) const {
 }
 
 NvResult NvClient::pairGetServerCertificate(const std::string& saltHex,
-                                                 std::string& response) const {
+                                            std::string& response) const {
     std::string query = "/pair?" + baseQuery();
     query += "&devicename=" + config.deviceName;
     query += "&updateState=1&phrase=getservercert&salt=" + saltHex;
@@ -65,31 +64,31 @@ NvResult NvClient::pairGetServerCertificate(const std::string& saltHex,
 }
 
 NvResult NvClient::pairSendClientChallenge(const std::string& challengeHex,
-                                                std::string& response) const {
+                                           std::string& response) const {
     std::string query = "/pair?" + baseQuery();
     query += "&devicename=" + config.deviceName;
     query += "&updateState=1&clientchallenge=" + challengeHex;
     return get(false, query, response, RequestTimeoutNanoseconds);
 }
 
-NvResult NvClient::pairSendServerChallengeResponse(
-    const std::string& challengeResponseHex, std::string& response) const {
+NvResult NvClient::pairSendServerChallengeResponse(const std::string& challengeResponseHex,
+                                                   std::string& response) const {
     std::string query = "/pair?" + baseQuery();
     query += "&devicename=" + config.deviceName;
     query += "&updateState=1&serverchallengeresp=" + challengeResponseHex;
     return get(false, query, response, RequestTimeoutNanoseconds);
 }
 
-NvResult NvClient::pairSendClientPairingSecret(
-    const std::string& pairingSecretHex, std::string& response) const {
+NvResult NvClient::pairSendClientPairingSecret(const std::string& pairingSecretHex,
+                                               std::string& response) const {
     std::string query = "/pair?" + baseQuery();
     query += "&devicename=" + config.deviceName;
     query += "&updateState=1&clientpairingsecret=" + pairingSecretHex;
     return get(false, query, response, RequestTimeoutNanoseconds);
 }
 
-NvResult NvClient::get(bool secure, const std::string& pathAndQuery,
-                            std::string& response, u64 timeoutNanoseconds) const {
+NvResult NvClient::get(bool secure, const std::string& pathAndQuery, std::string& response,
+                       u64 timeoutNanoseconds) const {
     response.clear();
 
     std::string url = secure ? httpsUrl(pathAndQuery) : httpUrl(pathAndQuery);
@@ -105,29 +104,32 @@ NvResult NvClient::get(bool secure, const std::string& pathAndQuery,
     u32 statusCode = 0;
 
     result = httpcSetKeepAlive(&context, HTTPC_KEEPALIVE_DISABLED);
-    if (R_FAILED(result)) goto request_error;
+    if (R_FAILED(result))
+        goto request_error;
 
     if (secure && !config.verifyServerCertificate) {
         result = httpcSetSSLOpt(&context, SSLCOPT_DisableVerify);
-        if (R_FAILED(result)) goto request_error;
+        if (R_FAILED(result))
+            goto request_error;
     }
 
     if (secure && !identity.certificateDer.empty() && !identity.privateKeyDer.empty()) {
-        result = httpcSetClientCert(&context,
-                                    identity.certificateDer.data(),
-                                    identity.certificateDer.size(),
-                                    identity.privateKeyDer.data(),
+        result = httpcSetClientCert(&context, identity.certificateDer.data(),
+                                    identity.certificateDer.size(), identity.privateKeyDer.data(),
                                     identity.privateKeyDer.size());
-        if (R_FAILED(result)) goto request_error;
+        if (R_FAILED(result))
+            goto request_error;
     }
 
     result = httpcBeginRequest(&context);
-    if (R_FAILED(result)) goto request_error;
+    if (R_FAILED(result))
+        goto request_error;
 
-    result = httpcGetResponseStatusCodeTimeout(&context, &statusCode,
-                                                timeoutNanoseconds);
-    if (timedOut(result)) goto request_timeout;
-    if (R_FAILED(result)) goto request_error;
+    result = httpcGetResponseStatusCodeTimeout(&context, &statusCode, timeoutNanoseconds);
+    if (timedOut(result))
+        goto request_timeout;
+    if (R_FAILED(result))
+        goto request_error;
 
     if (!responseCodeOk(statusCode)) {
         httpcCloseContext(&context);
@@ -135,7 +137,8 @@ NvResult NvClient::get(bool secure, const std::string& pathAndQuery,
     }
 
     result = httpcGetDownloadSizeState(&context, &downloadedSize, &contentSize);
-    if (R_FAILED(result)) goto request_error;
+    if (R_FAILED(result))
+        goto request_error;
     if (contentSize > MaxResponseBytes) {
         httpcCloseContext(&context);
         return NvResponseTooLarge{};
@@ -152,20 +155,21 @@ NvResult NvClient::get(bool secure, const std::string& pathAndQuery,
 
         response.resize(offset + DownloadChunkBytes);
         Result receiveResult =
-            httpcReceiveDataTimeout(&context,
-                                    reinterpret_cast<u8*>(&response[0]) + offset,
-                                    DownloadChunkBytes,
-                                    timeoutNanoseconds);
-        if (timedOut(receiveResult)) goto request_timeout;
+            httpcReceiveDataTimeout(&context, reinterpret_cast<u8*>(&response[0]) + offset,
+                                    DownloadChunkBytes, timeoutNanoseconds);
+        if (timedOut(receiveResult))
+            goto request_timeout;
 
         result = httpcGetDownloadSizeState(&context, &downloadedSize, &contentSize);
-        if (R_FAILED(result)) goto request_error;
+        if (R_FAILED(result))
+            goto request_error;
         response.resize(downloadedSize);
 
         result = receiveResult;
     } while (static_cast<u32>(result) == HTTPC_RESULTCODE_DOWNLOADPENDING);
 
-    if (R_FAILED(result)) goto request_error;
+    if (R_FAILED(result))
+        goto request_error;
 
     httpcCloseContext(&context);
     return NvOk{};

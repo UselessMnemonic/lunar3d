@@ -29,23 +29,22 @@ bool HeroBanner::render(C3D_RenderTarget& target) const {
     (void)target;
 
     if (backgroundColor_ != style::colors::Transparent) {
-        C2D_DrawRectSolid(bounds_.origin.x, bounds_.origin.y, 0.0f,
-                          bounds_.size.width, bounds_.size.height, backgroundColor_);
+        C2D_DrawRectSolid(bounds_.origin.x, bounds_.origin.y, 0.0f, bounds_.size.width,
+                          bounds_.size.height, backgroundColor_);
     }
 
     float messageWidth = 0.0f;
     float messageHeight = 0.0f;
-    C2D_TextGetDimensions(&message_, style::typography::TitleScale,
-                          style::typography::TitleScale, &messageWidth, &messageHeight);
+    C2D_TextGetDimensions(&message_, style::typography::TitleScale, style::typography::TitleScale,
+                          &messageWidth, &messageHeight);
 
     const float centerX = bounds_.origin.x + bounds_.size.width * 0.5f;
     const float centerY = bounds_.origin.y + bounds_.size.height * 0.5f;
     const float messageX = centerX - messageWidth * 0.5f;
     const float messageY = centerY - messageHeight * 0.5f;
 
-    C2D_DrawText(&message_, C2D_WithColor, messageX, messageY, 0.0f,
-                 style::typography::TitleScale, style::typography::TitleScale,
-                 style::colors::Text);
+    C2D_DrawText(&message_, C2D_WithColor, messageX, messageY, 0.0f, style::typography::TitleScale,
+                 style::typography::TitleScale, style::colors::Text);
     return true;
 }
 

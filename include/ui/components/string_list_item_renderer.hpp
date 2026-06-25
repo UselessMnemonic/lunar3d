@@ -15,9 +15,8 @@ namespace lunar3d {
 namespace ui {
 namespace components {
 
-template <typename T>
-class StringListItemRenderer {
-public:
+template <typename T> class StringListItemRenderer {
+  public:
     typedef std::function<void(size_t, const T&, std::string&)> TextProvider;
 
     StringListItemRenderer();
@@ -35,7 +34,7 @@ public:
     void renderItem(C3D_RenderTarget& target, Rect bounds, size_t position, const T& item,
                     bool selected) const;
 
-private:
+  private:
     C2D_TextBuf textBuffer_ = C2D_TextBufNew(512);
     TextProvider textProvider_;
     mutable std::string textScratch_;
@@ -46,43 +45,36 @@ private:
     u32 selectedRowColor_ = style::colors::PanelAccent;
 };
 
-template <typename T>
-StringListItemRenderer<T>::StringListItemRenderer() {}
+template <typename T> StringListItemRenderer<T>::StringListItemRenderer() {}
 
 template <typename T>
 StringListItemRenderer<T>::StringListItemRenderer(TextProvider textProvider)
     : textProvider_(textProvider) {}
 
-template <typename T>
-StringListItemRenderer<T>::~StringListItemRenderer() {
+template <typename T> StringListItemRenderer<T>::~StringListItemRenderer() {
     C2D_TextBufDelete(textBuffer_);
 }
 
-template <typename T>
-void StringListItemRenderer<T>::setTextProvider(TextProvider textProvider) {
+template <typename T> void StringListItemRenderer<T>::setTextProvider(TextProvider textProvider) {
     textProvider_ = textProvider;
 }
 
-template <typename T>
-void StringListItemRenderer<T>::setTextScale(float scale) {
+template <typename T> void StringListItemRenderer<T>::setTextScale(float scale) {
     textScale_ = scale;
 }
 
-template <typename T>
-void StringListItemRenderer<T>::setTextColor(u32 color) {
+template <typename T> void StringListItemRenderer<T>::setTextColor(u32 color) {
     textColor_ = color;
 }
 
 template <typename T>
-void StringListItemRenderer<T>::setColors(u32 backgroundColor, u32 rowColor,
-                                          u32 selectedRowColor) {
+void StringListItemRenderer<T>::setColors(u32 backgroundColor, u32 rowColor, u32 selectedRowColor) {
     backgroundColor_ = backgroundColor;
     rowColor_ = rowColor;
     selectedRowColor_ = selectedRowColor;
 }
 
-template <typename T>
-void StringListItemRenderer<T>::setSelectedColor(u32 color) {
+template <typename T> void StringListItemRenderer<T>::setSelectedColor(u32 color) {
     selectedRowColor_ = color;
 }
 
@@ -93,19 +85,18 @@ void StringListItemRenderer<T>::renderList(C3D_RenderTarget& target, Rect bounds
         C2D_TextBufClear(textBuffer_);
     }
 
-    C2D_DrawRectSolid(bounds.origin.x, bounds.origin.y, 0.0f, bounds.size.width,
-                      bounds.size.height, backgroundColor_);
+    C2D_DrawRectSolid(bounds.origin.x, bounds.origin.y, 0.0f, bounds.size.width, bounds.size.height,
+                      backgroundColor_);
 }
 
 template <typename T>
-void StringListItemRenderer<T>::renderItem(C3D_RenderTarget& target, Rect bounds,
-                                           size_t position, const T& item,
-                                           bool selected) const {
+void StringListItemRenderer<T>::renderItem(C3D_RenderTarget& target, Rect bounds, size_t position,
+                                           const T& item, bool selected) const {
     (void)target;
 
     const u32 rowColor = selected ? selectedRowColor_ : rowColor_;
-    C2D_DrawRectSolid(bounds.origin.x, bounds.origin.y, 0.0f, bounds.size.width,
-                      bounds.size.height, rowColor);
+    C2D_DrawRectSolid(bounds.origin.x, bounds.origin.y, 0.0f, bounds.size.width, bounds.size.height,
+                      rowColor);
 
     if (!textBuffer_ || !textProvider_) {
         return;
@@ -117,8 +108,8 @@ void StringListItemRenderer<T>::renderItem(C3D_RenderTarget& target, Rect bounds
     C2D_TextParse(&text, textBuffer_, textScratch_.c_str());
     C2D_TextOptimize(&text);
     C2D_DrawText(&text, C2D_WithColor, bounds.origin.x + style::metrics::ListTextInset,
-                 bounds.origin.y + style::metrics::ListTextInset, 0.0f, textScale_,
-                 textScale_, textColor_);
+                 bounds.origin.y + style::metrics::ListTextInset, 0.0f, textScale_, textScale_,
+                 textColor_);
 }
 
 } // namespace components

@@ -18,7 +18,7 @@ namespace activities {
 
 class PairActivity : public ui::Activity {
 
-  using PairWorker = task::Worker<void, task::PairTask>;
+    using PairWorker = task::Worker<void, task::PairTask>;
 
   public:
     PairActivity(const moonlight::ClientIdentity& identity, moonlight::HostList& hostList);

@@ -22,9 +22,8 @@ struct AppListSuccess {
 
 struct AppListInvalidRequest {};
 
-using AppListResult =
-    std::variant<AppListSuccess, AppListInvalidRequest, moonlight::NvResult,
-                 moonlight::GameStreamResult>;
+using AppListResult = std::variant<AppListSuccess, AppListInvalidRequest, moonlight::NvResult,
+                                   moonlight::GameStreamResult>;
 
 class AppListTask {
   public:

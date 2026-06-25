@@ -24,10 +24,9 @@ std::string hostDisplayName(const moonlight::Host& host) {
 
 } // namespace
 
-AppPickerActivity::AppPickerActivity(const moonlight::ClientIdentity& identity, ui::ActivityManager& activityManager)
-    : identity_(identity),
-      activityManager_(activityManager),
-      streamActivity_(identity),
+AppPickerActivity::AppPickerActivity(const moonlight::ClientIdentity& identity,
+                                     ui::ActivityManager& activityManager)
+    : identity_(identity), activityManager_(activityManager), streamActivity_(identity),
       titleLabel_("Apps", ui::Point(8.0f, 8.0f), ui::style::typography::TitleScale,
                   ui::style::colors::Text),
       footerLabel_("", ui::Point(16.0f, 212.0f), ui::style::typography::BodyScale,

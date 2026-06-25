@@ -10,7 +10,7 @@ namespace ui {
 namespace components {
 
 class Spinner : public Component {
-public:
+  public:
     Spinner();
     Spinner(Point position, float scale, u32 color);
     ~Spinner() override;
@@ -22,7 +22,7 @@ public:
     void update(u64 deltaMilli) override;
     bool render(C3D_RenderTarget& target) const override;
 
-private:
+  private:
     void updateText();
 
     C2D_TextBuf textBuffer_ = C2D_TextBufNew(16);

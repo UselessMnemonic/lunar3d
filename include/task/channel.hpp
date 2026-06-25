@@ -14,9 +14,8 @@ namespace task {
 namespace detail {
 
 class LightLockGuard {
-public:
-    explicit LightLockGuard(LightLock& lock) noexcept
-        : lock_(&lock) {
+  public:
+    explicit LightLockGuard(LightLock& lock) noexcept : lock_(&lock) {
         LightLock_Lock(lock_);
     }
 
@@ -36,19 +35,12 @@ public:
         lock_ = nullptr;
     }
 
-private:
+  private:
     LightLock* lock_;
 };
 
-[[noreturn]]
-inline void channelPanic(
-    const char* message,
-    size_t length
-) noexcept {
-    svcOutputDebugString(
-        message,
-        static_cast<s32>(length)
-    );
+[[noreturn]] inline void channelPanic(const char* message, size_t length) noexcept {
+    svcOutputDebugString(message, static_cast<s32>(length));
 
     /*
      * Raise a panic-class user break.
@@ -63,10 +55,7 @@ inline void channelPanic(
 }
 
 template <size_t Length>
-[[noreturn]]
-inline void channelPanic(
-    const char (&message)[Length]
-) noexcept {
+[[noreturn]] inline void channelPanic(const char (&message)[Length]) noexcept {
     static_assert(Length > 1, "Panic message must not be empty");
 
     channelPanic(message, Length - 1);
@@ -74,18 +63,11 @@ inline void channelPanic(
 
 } // namespace detail
 
-template <typename T, size_t Capacity>
-class Channel {
-public:
-    static_assert(
-        Capacity > 0,
-        "Channel capacity must be greater than zero"
-    );
+template <typename T, size_t Capacity> class Channel {
+  public:
+    static_assert(Capacity > 0, "Channel capacity must be greater than zero");
 
-    static_assert(
-        std::is_object<T>::value,
-        "Channel values must be object types"
-    );
+    static_assert(std::is_object<T>::value, "Channel values must be object types");
 
     /*
      * receive() must be able to construct a new T from the queued value.
@@ -93,11 +75,8 @@ public:
      * A normal copy constructor taking const T& can also satisfy construction
      * from an rvalue unless T has an explicitly deleted move constructor.
      */
-    static_assert(
-        std::is_constructible<T, T&&>::value ||
-        std::is_constructible<T, const T&>::value,
-        "Channel values must be move-constructible or copy-constructible"
-    );
+    static_assert(std::is_constructible<T, T&&>::value || std::is_constructible<T, const T&>::value,
+                  "Channel values must be move-constructible or copy-constructible");
 
     Channel() noexcept {
         LightLock_Init(&lock_);
@@ -129,10 +108,7 @@ public:
      * Blocks until capacity is available.
      */
     template <typename U = T>
-    typename std::enable_if<
-        std::is_constructible<U, const U&>::value,
-        void
-    >::type
+    typename std::enable_if<std::is_constructible<U, const U&>::value, void>::type
     send(const T& value) noexcept {
         sendValue(value);
     }
@@ -146,10 +122,7 @@ public:
      * If this returns normally, value has been transferred to the channel.
      */
     template <typename U = T>
-    typename std::enable_if<
-        std::is_constructible<U, U&&>::value,
-        void
-    >::type
+    typename std::enable_if<std::is_constructible<U, U&&>::value, void>::type
     send(T&& value) noexcept {
         sendValue(std::move(value));
     }
@@ -161,11 +134,7 @@ public:
      * Therefore, false leaves value untouched.
      */
     template <typename U = T>
-    [[nodiscard]]
-    typename std::enable_if<
-        std::is_constructible<U, const U&>::value,
-        bool
-    >::type
+    [[nodiscard]] typename std::enable_if<std::is_constructible<U, const U&>::value, bool>::type
     trySend(const T& value) noexcept {
         return trySendValue(value);
     }
@@ -178,11 +147,7 @@ public:
      * at the call site.
      */
     template <typename U = T>
-    [[nodiscard]]
-    typename std::enable_if<
-        std::is_constructible<U, U&&>::value,
-        bool
-    >::type
+    [[nodiscard]] typename std::enable_if<std::is_constructible<U, U&&>::value, bool>::type
     trySend(T&& value) noexcept {
         return trySendValue(std::move(value));
     }
@@ -194,10 +159,7 @@ public:
      * consumed while the channel remains full.
      */
     template <typename... Args>
-    typename std::enable_if<
-        std::is_constructible<T, Args&&...>::value,
-        void
-    >::type
+    typename std::enable_if<std::is_constructible<T, Args&&...>::value, void>::type
     emplace(Args&&... args) noexcept {
         detail::LightLockGuard guard(lock_);
 
@@ -206,15 +168,10 @@ public:
         }
 
         if (closed_) {
-            detail::channelPanic(
-                "lunar3d::task::Channel::emplace: closed channel"
-            );
+            detail::channelPanic("lunar3d::task::Channel::emplace: closed channel");
         }
 
-        constructAt(
-            tail_,
-            std::forward<Args>(args)...
-        );
+        constructAt(tail_, std::forward<Args>(args)...);
 
         tail_ = next(tail_);
         ++count_;
@@ -230,28 +187,19 @@ public:
      * the forwarded arguments are moved from.
      */
     template <typename... Args>
-    [[nodiscard]]
-    typename std::enable_if<
-        std::is_constructible<T, Args&&...>::value,
-        bool
-    >::type
+    [[nodiscard]] typename std::enable_if<std::is_constructible<T, Args&&...>::value, bool>::type
     tryEmplace(Args&&... args) noexcept {
         detail::LightLockGuard guard(lock_);
 
         if (closed_) {
-            detail::channelPanic(
-                "lunar3d::task::Channel::tryEmplace: closed channel"
-            );
+            detail::channelPanic("lunar3d::task::Channel::tryEmplace: closed channel");
         }
 
         if (count_ == Capacity) {
             return false;
         }
 
-        constructAt(
-            tail_,
-            std::forward<Args>(args)...
-        );
+        constructAt(tail_, std::forward<Args>(args)...);
 
         tail_ = next(tail_);
         ++count_;
@@ -270,8 +218,7 @@ public:
      *
      * nullopt unambiguously means closed and drained.
      */
-    [[nodiscard]]
-    std::optional<T> receive() noexcept {
+    [[nodiscard]] std::optional<T> receive() noexcept {
         detail::LightLockGuard guard(lock_);
 
         while (count_ == 0 && !closed_) {
@@ -296,8 +243,7 @@ public:
      * nullopt means that no value was immediately available. It intentionally
      * does not distinguish open-and-empty from closed-and-drained.
      */
-    [[nodiscard]]
-    std::optional<T> tryReceive() noexcept {
+    [[nodiscard]] std::optional<T> tryReceive() noexcept {
         detail::LightLockGuard guard(lock_);
 
         if (count_ == 0) {
@@ -323,9 +269,7 @@ public:
             detail::LightLockGuard guard(lock_);
 
             if (closed_) {
-                detail::channelPanic(
-                    "lunar3d::task::Channel::close: already closed"
-                );
+                detail::channelPanic("lunar3d::task::Channel::close: already closed");
             }
 
             closed_ = true;
@@ -341,24 +285,21 @@ public:
      * The result must not be used as the predicate for a subsequent send or
      * receive because the channel may change immediately after this returns.
      */
-    [[nodiscard]]
-    size_t size() const noexcept {
+    [[nodiscard]] size_t size() const noexcept {
         detail::LightLockGuard guard(lock_);
         return count_;
     }
 
-    [[nodiscard]]
-    static constexpr size_t capacity() noexcept {
+    [[nodiscard]] static constexpr size_t capacity() noexcept {
         return Capacity;
     }
 
-private:
+  private:
     struct Slot {
         alignas(T) unsigned char bytes[sizeof(T)];
     };
 
-    template <typename U>
-    void sendValue(U&& value) noexcept {
+    template <typename U> void sendValue(U&& value) noexcept {
         detail::LightLockGuard guard(lock_);
 
         while (count_ == Capacity && !closed_) {
@@ -366,15 +307,10 @@ private:
         }
 
         if (closed_) {
-            detail::channelPanic(
-                "lunar3d::task::Channel::send: closed channel"
-            );
+            detail::channelPanic("lunar3d::task::Channel::send: closed channel");
         }
 
-        constructAt(
-            tail_,
-            std::forward<U>(value)
-        );
+        constructAt(tail_, std::forward<U>(value));
 
         tail_ = next(tail_);
         ++count_;
@@ -383,15 +319,11 @@ private:
         CondVar_Signal(&canReceive_);
     }
 
-    template <typename U>
-    [[nodiscard]]
-    bool trySendValue(U&& value) noexcept {
+    template <typename U> [[nodiscard]] bool trySendValue(U&& value) noexcept {
         detail::LightLockGuard guard(lock_);
 
         if (closed_) {
-            detail::channelPanic(
-                "lunar3d::task::Channel::trySend: closed channel"
-            );
+            detail::channelPanic("lunar3d::task::Channel::trySend: closed channel");
         }
 
         if (count_ == Capacity) {
@@ -402,10 +334,7 @@ private:
          * Forwarding occurs only after the capacity check. A failed
          * trySend(std::move(value)) therefore does not actually move value.
          */
-        constructAt(
-            tail_,
-            std::forward<U>(value)
-        );
+        constructAt(tail_, std::forward<U>(value));
 
         tail_ = next(tail_);
         ++count_;
@@ -416,20 +345,12 @@ private:
         return true;
     }
 
-    template <typename... Args>
-    void constructAt(
-        size_t index,
-        Args&&... args
-    ) noexcept {
-        ::new (static_cast<void*>(storage_[index].bytes))
-            T(std::forward<Args>(args)...);
+    template <typename... Args> void constructAt(size_t index, Args&&... args) noexcept {
+        ::new (static_cast<void*>(storage_[index].bytes)) T(std::forward<Args>(args)...);
     }
 
-    [[nodiscard]]
-    T* at(size_t index) noexcept {
-        return std::launder(
-            reinterpret_cast<T*>(storage_[index].bytes)
-        );
+    [[nodiscard]] T* at(size_t index) noexcept {
+        return std::launder(reinterpret_cast<T*>(storage_[index].bytes));
     }
 
     /*
@@ -438,8 +359,7 @@ private:
      * Prefer construction from T&&. Fall back to const T& for types with an
      * explicitly deleted move constructor but an available copy constructor.
      */
-    [[nodiscard]]
-    std::optional<T> takeHead() noexcept {
+    [[nodiscard]] std::optional<T> takeHead() noexcept {
         T* item = at(head_);
 
         std::optional<T> result;
@@ -458,13 +378,8 @@ private:
         return result;
     }
 
-    [[nodiscard]]
-    static constexpr size_t next(
-        size_t index
-    ) noexcept {
-        return index + 1 == Capacity
-            ? 0
-            : index + 1;
+    [[nodiscard]] static constexpr size_t next(size_t index) noexcept {
+        return index + 1 == Capacity ? 0 : index + 1;
     }
 
     /*

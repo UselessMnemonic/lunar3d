@@ -21,10 +21,11 @@ namespace activities {
 
 class AppPickerActivity : public ui::Activity {
 
-  using AppListWorker = task::Worker<task::AppListResult, task::AppListTask>;
+    using AppListWorker = task::Worker<task::AppListResult, task::AppListTask>;
 
   public:
-    AppPickerActivity(const moonlight::ClientIdentity& identity, ui::ActivityManager& activityManager);
+    AppPickerActivity(const moonlight::ClientIdentity& identity,
+                      ui::ActivityManager& activityManager);
 
     void setHost(const moonlight::Host& host);
     void onStart() override;

@@ -14,12 +14,11 @@ namespace lunar3d {
 namespace ui {
 namespace components {
 
-template<size_t MaxUtf16 = 32>
-class InputField : public Component {
+template <size_t MaxUtf16 = 32> class InputField : public Component {
 
     using OnValueChangeListener = std::function<void(std::string&)>;
 
-public:
+  public:
     InputField();
     InputField(Rect bounds, const char* hint);
     ~InputField() override;
@@ -34,7 +33,7 @@ public:
     bool onTouchEvent(const TouchEvent& event) override;
     bool render(C3D_RenderTarget& target) const override;
 
-private:
+  private:
     bool openKeyboard();
     void updateDisplayText();
 
@@ -47,58 +46,49 @@ private:
     OnValueChangeListener onValueChangeListener_;
 };
 
-template<size_t MaxUtf16>
-InputField<MaxUtf16>::InputField() {}
+template <size_t MaxUtf16> InputField<MaxUtf16>::InputField() {}
 
-template<size_t MaxUtf16>
+template <size_t MaxUtf16>
 InputField<MaxUtf16>::InputField(Rect bounds, const char* hint) : bounds_(bounds), hint_(hint) {
     updateDisplayText();
 }
 
-template<size_t MaxUtf16>
-InputField<MaxUtf16>::~InputField() {
+template <size_t MaxUtf16> InputField<MaxUtf16>::~InputField() {
     C2D_TextBufDelete(textBuffer_);
 }
 
-template<size_t MaxUtf16>
-void InputField<MaxUtf16>::setBounds(Rect bounds) {
+template <size_t MaxUtf16> void InputField<MaxUtf16>::setBounds(Rect bounds) {
     bounds_ = bounds;
 }
 
-template<size_t MaxUtf16>
-void InputField<MaxUtf16>::setHint(const char* hint) {
+template <size_t MaxUtf16> void InputField<MaxUtf16>::setHint(const char* hint) {
     hint_ = hint;
     updateDisplayText();
 }
 
-template<size_t MaxUtf16>
-void InputField<MaxUtf16>::setText(const char* text) {
+template <size_t MaxUtf16> void InputField<MaxUtf16>::setText(const char* text) {
     text_ = text;
     updateDisplayText();
 }
 
-template<size_t MaxUtf16>
-void InputField<MaxUtf16>::setEnabled(bool enabled) {
+template <size_t MaxUtf16> void InputField<MaxUtf16>::setEnabled(bool enabled) {
     enabled_ = enabled;
 }
 
-template<size_t MaxUtf16>
+template <size_t MaxUtf16>
 void InputField<MaxUtf16>::setOnValueChangeListener(OnValueChangeListener listener) {
     onValueChangeListener_ = listener;
 }
 
-template<size_t MaxUtf16>
-bool InputField<MaxUtf16>::enabled() const {
+template <size_t MaxUtf16> bool InputField<MaxUtf16>::enabled() const {
     return enabled_;
 }
 
-template<size_t MaxUtf16>
-const std::string& InputField<MaxUtf16>::data() const {
+template <size_t MaxUtf16> const std::string& InputField<MaxUtf16>::data() const {
     return text_;
 }
 
-template<size_t MaxUtf16>
-bool InputField<MaxUtf16>::onTouchEvent(const TouchEvent& event) {
+template <size_t MaxUtf16> bool InputField<MaxUtf16>::onTouchEvent(const TouchEvent& event) {
     if (!enabled_) {
         return false;
     }
@@ -114,8 +104,7 @@ bool InputField<MaxUtf16>::onTouchEvent(const TouchEvent& event) {
     return openKeyboard();
 }
 
-template<size_t MaxUtf16>
-bool InputField<MaxUtf16>::render(C3D_RenderTarget& target) const {
+template <size_t MaxUtf16> bool InputField<MaxUtf16>::render(C3D_RenderTarget& target) const {
     (void)target;
 
     const u32 panelColor = enabled_ ? style::colors::Panel : style::colors::PanelDisabled;
@@ -125,19 +114,18 @@ bool InputField<MaxUtf16>::render(C3D_RenderTarget& target) const {
     C2D_DrawRectSolid(bounds_.origin.x, bounds_.origin.y + bounds_.size.height - 3.0f, 0.0f,
                       bounds_.size.width, style::metrics::AccentRule, accentColor);
 
-    const u32 textColor = !enabled_ || text_.empty() ? style::colors::HintText : style::colors::Text;
-    C2D_DrawText(&displayText_, C2D_WithColor,
-                 bounds_.origin.x + style::metrics::ControlTextInsetX,
+    const u32 textColor =
+        !enabled_ || text_.empty() ? style::colors::HintText : style::colors::Text;
+    C2D_DrawText(&displayText_, C2D_WithColor, bounds_.origin.x + style::metrics::ControlTextInsetX,
                  bounds_.origin.y + style::metrics::ControlTextInsetY, 0.0f,
                  style::typography::ControlScale, style::typography::ControlScale, textColor);
     return true;
 }
 
-template<size_t MaxUtf16>
-bool InputField<MaxUtf16>::openKeyboard() {
+template <size_t MaxUtf16> bool InputField<MaxUtf16>::openKeyboard() {
     static_assert(MaxUtf16 > 0);
     constexpr size_t BufferSize = MaxUtf16 * 3 + 1;
-    std::array<char, BufferSize> buffer {};
+    std::array<char, BufferSize> buffer{};
 
     SwkbdState keyboard;
     swkbdInit(&keyboard, SWKBD_TYPE_WESTERN, 2, MaxUtf16);
@@ -160,8 +148,7 @@ bool InputField<MaxUtf16>::openKeyboard() {
     return true;
 }
 
-template<size_t MaxUtf16>
-void InputField<MaxUtf16>::updateDisplayText() {
+template <size_t MaxUtf16> void InputField<MaxUtf16>::updateDisplayText() {
     if (!textBuffer_) {
         return;
     }

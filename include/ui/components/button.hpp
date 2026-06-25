@@ -18,7 +18,7 @@ enum class ButtonRenderState {
 class Button : public Component {
     using OnClickListener = std::function<void()>;
 
-public:
+  public:
     Button();
     Button(const char* label, Rect bounds);
     ~Button() override;
@@ -37,7 +37,7 @@ public:
     bool onTouchEvent(const TouchEvent& event) override;
     bool render(C3D_RenderTarget& target) const override;
 
-private:
+  private:
     C2D_TextBuf textBuffer_ = C2D_TextBufNew(64);
     C2D_Text label_;
     Rect bounds_;

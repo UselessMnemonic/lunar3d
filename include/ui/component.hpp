@@ -10,7 +10,7 @@ namespace lunar3d {
 namespace ui {
 
 class Component {
-public:
+  public:
     virtual ~Component() {}
 
     void setVisible(bool visible);
@@ -25,7 +25,7 @@ public:
     virtual void update(u64 deltaMilli);
     virtual bool render(C3D_RenderTarget& target) const = 0;
 
-private:
+  private:
     bool visible_ = true;
 };
 

@@ -16,7 +16,7 @@ enum class HostListResult {
 };
 
 class HostList {
-public:
+  public:
     using Iterator = std::vector<Host>::iterator;
     using ConstIterator = std::vector<Host>::const_iterator;
 
@@ -33,7 +33,7 @@ public:
     ConstIterator begin() const;
     ConstIterator end() const;
 
-private:
+  private:
     HostListResult store() const;
     static HostListResult load(const std::string& directory, HostList& hostList);
     static HostListResult store(const std::string& directory, const HostList& hostList);
