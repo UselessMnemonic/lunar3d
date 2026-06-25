@@ -17,30 +17,11 @@
         "vadimcn.vscode-lldb"
       ],
       "settings": {
-        "files.associations": {
-          "*.h": "c",
-          "*.hpp": "cpp",
-          "*.c": "c",
-          "*.cpp": "cpp"
-        },
-        "makefile.configureOnOpen": true,
-        "makefile.makePath": "make",
-        "makefile.launchConfigurations": [],
-        "terminal.integrated.defaultProfile.linux": "bash",
         "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
-        "C_Cpp.default.includePath": [
-          "${workspaceFolder}/source",
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/external",
-          "/opt/devkitpro/libctru/include",
-          "/opt/devkitpro/portlibs/3ds/include"
-        ],
         "C_Cpp.default.defines": [
           "__3DS__",
           "ARM11"
-        ],
-        "C_Cpp.default.compilerPath": "/opt/devkitpro/devkitARM/bin/arm-none-eabi-g++",
-        "C_Cpp.default.intelliSenseMode": "linux-gcc-arm"
+        ]
       }
     }
   }
