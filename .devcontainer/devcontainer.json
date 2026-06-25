@@ -1,7 +1,7 @@
 {
   "name": "Lunar3D",
   "build": {
-    "dockerfile": "../Dockerfile",
+    "dockerfile": "../Containerfile",
     "context": "..",
     "target": "dev"
   },
