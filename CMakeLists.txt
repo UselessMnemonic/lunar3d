@@ -186,7 +186,7 @@ target_link_options(${TARGET}.elf PRIVATE
 )
 target_link_directories(${TARGET}.elf PRIVATE ${PORTLIBS}/lib ${CTRULIB}/lib)
 target_link_libraries(${TARGET}.elf PRIVATE
-    lunar3d_3ds_settings moonlight-common-c citro2d citro3d tinyxml2 mbedtls mbedx509 mbedcrypto ctru m
+    lunar3d_3ds_settings moonlight-common-c citro2d citro3d tinyxml2 mbedtls mbedx509 mbedcrypto opus ctru m
 )
 
 set(OUTPUT_FILE ${BUILD_DIR}/${TARGET})

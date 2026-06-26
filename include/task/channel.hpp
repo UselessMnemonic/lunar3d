@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utility.hpp"
+
 #include <3ds.h>
 
 #include <cstddef>
@@ -38,28 +40,6 @@ class LightLockGuard {
   private:
     LightLock* lock_;
 };
-
-[[noreturn]] inline void channelPanic(const char* message, size_t length) noexcept {
-    svcOutputDebugString(message, static_cast<s32>(length));
-
-    /*
-     * Raise a panic-class user break.
-     *
-     * svcExitProcess() is a fallback in case a debugger resumes execution
-     * after the break.
-     */
-    svcBreak(USERBREAK_PANIC);
-    svcExitProcess();
-
-    __builtin_unreachable();
-}
-
-template <size_t Length>
-[[noreturn]] inline void channelPanic(const char (&message)[Length]) noexcept {
-    static_assert(Length > 1, "Panic message must not be empty");
-
-    channelPanic(message, Length - 1);
-}
 
 } // namespace detail
 
@@ -168,7 +148,7 @@ template <typename T, size_t Capacity> class Channel {
         }
 
         if (closed_) {
-            detail::channelPanic("lunar3d::task::Channel::emplace: closed channel");
+            panic("lunar3d::task::Channel::emplace: closed channel");
         }
 
         constructAt(tail_, std::forward<Args>(args)...);
@@ -192,7 +172,7 @@ template <typename T, size_t Capacity> class Channel {
         detail::LightLockGuard guard(lock_);
 
         if (closed_) {
-            detail::channelPanic("lunar3d::task::Channel::tryEmplace: closed channel");
+            panic("lunar3d::task::Channel::tryEmplace: closed channel");
         }
 
         if (count_ == Capacity) {
@@ -269,7 +249,7 @@ template <typename T, size_t Capacity> class Channel {
             detail::LightLockGuard guard(lock_);
 
             if (closed_) {
-                detail::channelPanic("lunar3d::task::Channel::close: already closed");
+                panic("lunar3d::task::Channel::close: already closed");
             }
 
             closed_ = true;
@@ -307,7 +287,7 @@ template <typename T, size_t Capacity> class Channel {
         }
 
         if (closed_) {
-            detail::channelPanic("lunar3d::task::Channel::send: closed channel");
+            panic("lunar3d::task::Channel::send: closed channel");
         }
 
         constructAt(tail_, std::forward<U>(value));
@@ -323,7 +303,7 @@ template <typename T, size_t Capacity> class Channel {
         detail::LightLockGuard guard(lock_);
 
         if (closed_) {
-            detail::channelPanic("lunar3d::task::Channel::trySend: closed channel");
+            panic("lunar3d::task::Channel::trySend: closed channel");
         }
 
         if (count_ == Capacity) {

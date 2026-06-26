@@ -7,7 +7,11 @@ ENV PATH=/opt/devkitpro/tools/bin:/opt/devkitpro/devkitARM/bin:${PATH}
 RUN set -eu; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-      clang-format cmake ninja-build ssh; \
+      clang-format \
+      cmake \
+      ninja-build \
+      ssh \
+      libopus-dev; \
     rm -rf /var/lib/apt/lists/*
 
 RUN set -eu; \
